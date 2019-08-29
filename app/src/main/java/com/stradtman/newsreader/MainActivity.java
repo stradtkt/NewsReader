@@ -2,6 +2,7 @@ package com.stradtman.newsreader;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.AsyncTask;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     ArrayList<String> titles = new ArrayList<String>();
+    ArrayList<String> content = new ArrayList<>();
     ArrayAdapter arrayAdapter;
     SQLiteDatabase articleDB;
 
@@ -43,6 +45,21 @@ public class MainActivity extends AppCompatActivity {
             task.execute("https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty");
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        updateListView();
+    }
+
+    public void updateListView() {
+        Cursor cursor = articleDB.rawQuery("SELECT * FROM articles", null);
+        int contentIndex = cursor.getColumnIndex("content");
+        int titleIndex = cursor.getColumnIndex("title");
+        if(cursor.moveToFirst()) {
+            titles.clear();
+            content.clear();
+            do {
+                titles.add(cursor.getString(titleIndex));
+                content.add(cursor.getString(contentIndex));
+            } while(cursor.moveToNext());
         }
     }
 
@@ -98,6 +115,12 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            updateListView();
         }
     }
 }
